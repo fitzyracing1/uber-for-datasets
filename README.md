@@ -78,7 +78,7 @@ test/               node --test suites (data, agents, market)
 ## Tests
 
 ```sh
-npm test             # node --test test/ (Node 18+)
+npm test             # node --test test/*.test.js (Node 18+)
 ```
 
 There are 24 tests: the parsers and profiling, every agent on the seeded samples (the injected sensor spikes are

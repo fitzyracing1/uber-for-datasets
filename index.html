@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hailset · Uber for datasets</title>
+<meta name="description" content="Drop in a dataset, describe the job in plain words, and get matched to compute and AI agents with a price and an ETA.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23000'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%2306c167'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo"></span><b>Hailset</b><span class="tag">Uber for datasets</span></div>
+  <nav id="tabs">
+    <button data-tab="request" class="on">Request</button>
+    <button data-tab="trips">Jobs <span id="tripCount" class="pill"></span></button>
+    <button data-tab="drive">Drive</button>
+    <button data-tab="market">Market</button>
+  </nav>
+  <div class="surge" id="surge" title="Share of pool capacity in use"></div>
+</header>
+
+<main>
+<section id="tab-request" class="tab on">
+  <div class="grid">
+    <div class="col">
+      <div class="card">
+        <h2><span class="step">1</span> Your dataset</h2>
+        <label class="drop" id="drop">
+          <input type="file" id="file" accept=".csv,.tsv,.json,.jsonl,.ndjson,.txt,.log">
+          <b>Drop a CSV, JSON, JSON Lines or log file</b><span>or click to choose. Everything is parsed in this browser.</span>
+        </label>
+        <div class="samples" id="samples"></div>
+        <div id="profile"></div>
+      </div>
+      <div class="card">
+        <h2><span class="step">2</span> The job</h2>
+        <div class="row"><select id="template"><option value="">Templates…</option></select><button class="ghost" id="saveTpl" type="button">Save as template</button></div>
+        <textarea id="desc" rows="3" placeholder="e.g. Clean this sales data, extract every company and person, score lead quality, and give me a ranked list with confidence."></textarea>
+        <div class="chips" id="types"></div>
+        <p class="hint" id="intentHint"></p>
+      </div>
+      <div class="card">
+        <h2><span class="step">3</span> Constraints</h2>
+        <div class="slider"><span>Cheapest</span><input type="range" id="speed" min="0" max="1" step="0.05" value="0.5"><span>Fastest</span></div>
+        <div class="row">
+          <label>Privacy <select id="privacy"></select></label>
+          <label>Quote for <input type="number" id="rows" min="1" step="1"> rows</label>
+        </div>
+        <div class="row">
+          <label>Max price $ <input type="number" id="maxPrice" min="0" step="0.5" placeholder="none"></label>
+          <label>Deadline <input type="number" id="deadline" min="1" step="1" placeholder="none"> min</label>
+        </div>
+        <label class="check"><input type="checkbox" id="human"> Verified tier: a human reviews the output</label>
+        <button class="go" id="findBtn" type="button">Find compute</button>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card sticky">
+        <h2>Offers</h2>
+        <div id="offers"><p class="empty">Pick a sample or drop a file, then find compute.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="tab-trips" class="tab">
+  <div id="trips"></div>
+</section>
+
+<section id="tab-drive" class="tab">
+  <div class="grid wide-right">
+    <div class="col">
+      <div class="card">
+        <h2>List your compute</h2>
+        <p class="hint">Got spare GPUs or CPUs? Put them in the pool. Riders get matched to you by price, speed, rating and privacy route.</p>
+        <form id="driveForm" class="form">
+          <label>Name <input name="name" required maxlength="60" placeholder="Garage rig: 2× RTX 4090"></label>
+          <div class="row">
+            <label>Kind <select name="kind"><option value="gpu">GPU</option><option value="cpu">CPU</option></select></label>
+            <label>Region <select name="region"><option>us-east</option><option>us-central</option><option>us-west</option><option>eu-west</option><option>eu-north</option><option>ap-south</option></select></label>
+          </div>
+          <div class="row">
+            <label>$ per CU <input name="pricePerCU" type="number" step="any" min="0.0001" value="0.0035"></label>
+            <label>CU per second <input name="cuPerSec" type="number" step="any" min="0.01" value="1.2"></label>
+            <label>Slots <input name="slots" type="number" min="1" max="64" value="2"></label>
+          </div>
+          <div class="row routes">
+            <label class="check"><input type="checkbox" name="routes" value="public" checked> Public</label>
+            <label class="check"><input type="checkbox" name="routes" value="ephemeral" checked> Ephemeral containers</label>
+            <label class="check"><input type="checkbox" name="routes" value="private"> Private cloud</label>
+          </div>
+          <button class="go" type="submit">Go online</button>
+        </form>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card"><h2>Drivers</h2><div id="drivers"></div></div>
+      <div class="card"><h2>Agents</h2><div id="agentsTbl"></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="tab-market" class="tab">
+  <div class="grid">
+    <div class="col">
+      <div class="card">
+        <h2>Pool load</h2>
+        <div id="load"></div>
+        <div class="row"><label class="check"><input type="checkbox" id="rush"> Rush hour (more riders)</label><button class="ghost" id="reset" type="button">Reset demo</button></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card"><h2>How pricing works</h2>
+        <ul class="how">
+          <li><b>Compute units.</b> 1 CU is about one GPU-second on a reference card. Each job type costs a base amount plus some CU per 1,000 rows, scaled by column count. CPU pools pay 1.5× on GPU-heavy work.</li>
+          <li><b>Price.</b> Compute (CU × the provider's rate) + agent fees + human review, then × surge, then a 10% platform fee. Minimum fare is $0.50.</li>
+          <li><b>Surge.</b> Starts once the pool is more than 60% busy: ×1 + 2.5 × (busy − 60%), capped at ×2.5. The on-device route never surges.</li>
+          <li><b>Matching.</b> Offers are ranked by price and ETA, weighted by your slider, nudged by rating and preferred providers. Privacy routes are hard filters.</li>
+          <li><b>Payouts.</b> Providers earn compute × surge. Agents earn their fees × surge.</li>
+        </ul>
+        <p class="hint">Time runs 60× faster here: one real second is one simulated minute.</p>
+        <div id="ledger"></div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+<footer>Hailset MVP. The agents actually run in this browser on your data; providers, payments and other riders are simulated. Nothing is uploaded.</footer>
+<script type="module" src="src/app.js"></script>
+</body>
+</html>

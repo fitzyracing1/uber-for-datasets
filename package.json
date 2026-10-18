@@ -1,0 +1,12 @@
+{
+  "name": "uber-for-datasets",
+  "version": "1.0.0",
+  "description": "Hailset: an Uber-style marketplace MVP that matches datasets and jobs to compute providers and AI agents, with upfront prices, surge, ETAs, ratings and real in-browser agents.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test test/",
+    "start": "python3 -m http.server 8080"
+  },
+  "engines": { "node": ">=18" }
+}

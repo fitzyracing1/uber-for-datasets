@@ -1,5 +1,7 @@
 # Hailset: Uber for datasets
 
+**Live:** https://fitzyracing1.github.io/uber-for-datasets/ · **Repo:** https://github.com/fitzyracing1/uber-for-datasets
+
 ![Request view: dataset profile and ranked offers](docs/screenshot.png)
 
 You have data and a job. Other people have spare compute. Hailset connects the two, Uber-style.
